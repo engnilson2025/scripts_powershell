@@ -1,0 +1,15 @@
+$origem = "E:\Pasta de Trabalho"
+$atalhoPublico = "C:\Users\Public\Desktop\Pasta de Trabalho.lnk"
+
+# Verifica se a pasta de origem existe, se não, cria
+if (-not (Test-Path $origem)) {
+    New-Item -ItemType Directory -Path $origem -Force
+}
+
+# Verifica se o atalho na Área de Trabalho Pública já existe, se não, cria
+if (-not (Test-Path $atalhoPublico)) {
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($atalhoPublico)
+    $shortcut.TargetPath = $origem
+    $shortcut.Save()
+}
