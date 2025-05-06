@@ -1,16 +1,16 @@
-# Caminho da imagem
-$downloadDir = $env:TEMP
-$imgName = "wallpaper.jpg"
-$imgPath = Join-Path $downloadDir $imgName
-$imgUrl = "https://drive.google.com/uc?export=download&id=171Lt7GApFBfHCp3P7_KKgM73AyPcZSgr"
+$imageUrl = "https://drive.google.com/uc?export=download&id=171Lt7GApFBfHCp3P7_KKgM73AyPcZSgr"
+$imagePath = "$env:TEMP\wallpaper.jpg"
 
-# Baixar a imagem
-Invoke-WebRequest -Uri $imgUrl -OutFile $imgPath
+# Baixar imagem
+Invoke-WebRequest -Uri $imageUrl -OutFile $imagePath
 
-# Definir como papel de parede
-Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name Wallpaper -Value $imgPath
+# Confirmar que foi baixado
+if (-Not (Test-Path $imagePath)) {
+    Write-Output "Download da imagem falhou."
+    exit 1
+}
 
-# Atualizar a configuração do sistema
+# Função para aplicar papel de parede
 Add-Type @"
 using System.Runtime.InteropServices;
 public class NativeMethods {
@@ -18,7 +18,12 @@ public class NativeMethods {
     public static extern bool SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
 }
 "@
-[NativeMethods]::SystemParametersInfo(20, 0, $imgPath, 3)
 
-Write-Output "Papel de parede atualizado com sucesso!"
+# Flags: 0x01 = Update INI file | 0x02 = Send change
+$success = [NativeMethods]::SystemParametersInfo(20, 0, $imagePath, 0x01 -bor 0x02)
 
+if ($success) {
+    Write-Output "✅ Papel de parede atualizado com sucesso!"
+} else {
+    Write-Output "❌ Falha ao aplicar papel de parede."
+}
